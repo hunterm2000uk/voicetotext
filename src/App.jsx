@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-    import { GoogleGenerativeAI } from "@google/generative-ai";
+    import OpenAI from 'openai';
 
     function App() {
       const [isRecording, setIsRecording] = useState(false);
       const [transcription, setTranscription] = useState('');
       const mediaRecorder = useRef(null);
       const audioChunks = useRef([]);
+      const [debugMessages, setDebugMessages] = useState([]);
 
-      const geminiApiKey = process.env.GEMINI_API_KEY;
+      const openaiApiKey = process.env.OPENAI_API_KEY;
+
+      const logDebug = (message) => {
+        setDebugMessages((prevMessages) => [...prevMessages, message]);
+      };
 
       useEffect(() => {
         if (isRecording) {
@@ -18,72 +23,58 @@ import React, { useState, useEffect, useRef } from 'react';
       }, [isRecording]);
 
       const startRecording = async () => {
+        logDebug('Starting recording...');
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           mediaRecorder.current = new MediaRecorder(stream);
           mediaRecorder.current.ondataavailable = (event) => {
+            logDebug('Audio data available.');
             audioChunks.current.push(event.data);
           };
           mediaRecorder.current.onstop = async () => {
+            logDebug('Recording stopped.');
             const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
             audioChunks.current = [];
             await transcribeAudio(audioBlob);
           };
           mediaRecorder.current.start();
+          logDebug('MediaRecorder started.');
         } catch (error) {
           console.error('Error accessing microphone:', error);
+          logDebug(`Error accessing microphone: ${error.message}`);
         }
       };
 
       const stopRecording = () => {
+        logDebug('Stopping recording...');
         if (mediaRecorder.current) {
           mediaRecorder.current.stop();
+          logDebug('MediaRecorder stopped.');
         }
       };
 
       const transcribeAudio = async (audioBlob) => {
-        if (!geminiApiKey) {
-          console.error('Gemini API key is missing.  Check your .env file.');
+        logDebug('Starting transcription process...');
+        if (!openaiApiKey) {
+          console.error('OpenAI API key is missing.  Check your .env file.');
+          logDebug('OpenAI API key is missing!');
           return;
         }
 
-        const genAI = new GoogleGenerativeAI(geminiApiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-        const audioData = await blobToBase64(audioBlob);
-
-        async function blobToBase64(blob) {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = () => reject(reader.error);
-            reader.onabort = () => reject(new Error("Read aborted"));
-            reader.readAsDataURL(blob);
-          });
-        }
-
-        const prompt = "Transcribe the following audio:";
-
-        const request = {
-          contents: [{
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType: "audio/webm",
-                  data: audioData.split(',')[1]
-                }
-              },
-            ],
-          }],
-        };
+        const openai = new OpenAI({ apiKey: openaiApiKey, dangerouslyAllowBrowser: true });
+        const audioFile = new File([audioBlob], "audio.webm");
 
         try {
-          const response = await model.generateContent(request);
-          const text = response.response.text();
-          setTranscription((prevTranscription) => prevTranscription + text + ' ');
+          logDebug('Calling OpenAI Whisper API...');
+          const resp = await openai.audio.transcriptions.create({
+            file: audioFile,
+            model: "whisper-1",
+          });
+          logDebug('OpenAI Whisper API call successful.');
+          setTranscription((prevTranscription) => prevTranscription + resp.text + ' ');
         } catch (error) {
           console.error("Transcription error:", error);
+          logDebug(`Transcription error: ${error.message}`);
         }
       };
 
@@ -103,6 +94,15 @@ import React, { useState, useEffect, useRef } from 'react';
             value={transcription}
             readOnly
           />
+          
+            <h2>Debug Log</h2>
+            <textarea
+              rows="10"
+              cols="50"
+              value={debugMessages.join('\n')}
+              readOnly
+            />
+          
         </>
       );
     }
