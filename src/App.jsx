@@ -97,9 +97,12 @@ import React, { useState, useEffect, useRef } from 'react';
           <button onClick={toggleRecording}>
             {isRecording ? 'Stop Recording' : 'Start Recording'}
           </button>
-          
-            {transcription}
-          
+          <textarea
+            rows="10"
+            cols="50"
+            value={transcription}
+            readOnly
+          />
         </>
       );
     }
