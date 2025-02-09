@@ -1,23 +1,28 @@
 {
-      "name": "realtime-audio-transcription",
-      "private": true,
-      "version": "0.0.0",
-      "type": "module",
-      "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview"
-      },
-      "dependencies": {
-        "dotenv": "^16.4.5",
-        "openai": "^4.0.0",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
-      },
-      "devDependencies": {
-        "@types/react": "^18.2.56",
-        "@types/react-dom": "^18.2.19",
-        "@vitejs/plugin-react": "^4.2.1",
-        "vite": "^5.2.8"
-      }
-    }
+  "name": "realtime-audio-transcription",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"Running from package.json\" && node_modules/.bin/vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "openai": "^4.24.7",
+    "react": "16.14.0",
+    "react-dom": "16.14.0",
+    "react-mic": "^12.4.6",
+    "vite": "^5.0.8",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "16.14.35",
+    "@types/react-dom": "16.9.14",
+    "@vitejs/plugin-react": "^4.2.1"
+  },
+  "resolutions": {
+    "react": "16.14.0",
+    "react-dom": "16.14.0"
+  }
+}
