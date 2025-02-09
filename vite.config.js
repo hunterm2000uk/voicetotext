@@ -6,8 +6,13 @@ import { defineConfig } from 'vite'
       const env = loadEnv(mode, process.cwd(), '');
       return {
         define: {
-          'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+          'process.env.OPENAI_API_KEY': JSON.stringify(env.OPENAI_API_KEY)
         },
         plugins: [react()],
+        build: {
+          rollupOptions: {
+            external: ['openai'],
+          },
+        },
       }
     })
